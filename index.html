@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoevaluación de Competencias Docentes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .transition-all { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col">
+
+    <header class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white shadow-lg py-6 px-4 md:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Autoevaluación de Competencias Docentes</h1>
+                <p class="text-emerald-100 text-sm mt-1">Evalúa tu nivel competencial en la enseñanza de las ciencias según la rúbrica oficial.</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-3">
+                <button onclick="cargarEjemplo()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg font-medium shadow transition-all border border-emerald-500">
+                    Cargar Ejemplo
+                </button>
+                <button onclick="reiniciarFormulario()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow transition-all">
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Questions Section (Left 7 cols) -->
+        <div class="lg:col-span-7 space-y-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-slate-900">Instrucciones</h2>
+                    <span id="completion-counter" class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">0 de 14 respondidas</span>
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed">
+                    Para cada uno de los ítems organizados en las 4 categorías, selecciona el nivel (del 1 al 4) que mejor describa tu desempeño y situación actual. Cada nivel otorga una puntuación de 1 a 4 puntos.
+                </p>
+            </div>
+
+            <form id="competencias-form" class="space-y-8">
+                <!-- CATEGORÍA 1 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-emerald-50 border-b border-emerald-100 px-6 py-4">
+                        <h3 class="font-bold text-emerald-900 text-base">1. Específicas (Ciencia)</h3>
+                    </div>
+                    <div class="p-6 space-y-6" id="cat-1-items">
+                        <!-- Dynamic items generated via JS or structured HTML -->
+                    </div>
+                </div>
+
+                <!-- CATEGORÍA 2 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-50 border-b border-teal-100 px-6 py-4">
+                        <h3 class="font-bold text-teal-900 text-base">2. Pedagógicas y Didácticas</h3>
+                    </div>
+                    <div class="p-6 space-y-6" id="cat-2-items"></div>
+                </div>
+
+                <!-- CATEGORÍA 3 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-cyan-50 border-b border-cyan-100 px-6 py-4">
+                        <h3 class="font-bold text-cyan-900 text-base">3. Relación con los Alumnos</h3>
+                    </div>
+                    <div class="p-6 space-y-6" id="cat-3-items"></div>
+                </div>
+
+                <!-- CATEGORÍA 4 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-sky-50 border-b border-sky-100 px-6 py-4">
+                        <h3 class="font-bold text-sky-900 text-base">4. Docente Responsable</h3>
+                    </div>
+                    <div class="p-6 space-y-6" id="cat-4-items"></div>
+                </div>
+
+                <div class="sticky bottom-4 z-10 bg-white/90 backdrop-blur p-4 rounded-2xl shadow-lg border border-slate-200 flex justify-center">
+                    <button type="button" onclick="calcularResultados()" class="w-full md:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition-all text-center">
+                        Calcular y Actualizar Gráficas
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results & Charts Section (Right 5 cols) -->
+        <div class="lg:col-span-5 space-y-8">
+            <div class="sticky top-6 space-y-8">
+                <!-- Summary Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Resumen de Puntuaciones</h3>
+                    <div id="category-summary" class="space-y-4">
+                        <p class="text-sm text-slate-500 italic">Completa la autoevaluación y pulsa "Calcular y Actualizar Gráficas" para ver el desglose.</p>
+                    </div>
+                </div>
+
+                <!-- Bar Chart Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Gráfica Normal (Puntuación por Categoría)</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Radar Chart Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4">Gráfica de Telaraña (Radar de Competencias)</h3>
+                    <div class="relative h-72 w-full">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Modal -->
+    <div id="notification-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center">
+            <div id="modal-icon" class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">✓</div>
+            <h4 id="modal-title" class="text-lg font-bold text-slate-900 mb-2">Aviso</h4>
+            <p id="modal-message" class="text-sm text-slate-600 mb-6">Mensaje descriptivo aquí.</p>
+            <button onclick="cerrarModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2 rounded-xl font-medium transition-all w-full">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        // Data structure matching the exact PDF requirements
+        const categoriasData = [
+            {
+                id: 1,
+                nombre: "Específicas (Ciencia)",
+                items: [
+                    {
+                        id: "1_1",
+                        enunciado: "1.1 ¿Incluyo episodios históricos de la ciencia en mis trabajos para mostrar conceptos científicos?",
+                        niveles: [
+                            "No conozco episodios históricos de la ciencia ni los busco, por tanto, no los incluyo en trabajos.",
+                            "Conozco algunos episodios históricos de la ciencia, pero no los incluyo en mis trabajos.",
+                            "Conozco episodios históricos de la ciencia y los incluyo en los trabajos pero quedan poco conectados con el contenido y me costaría responder a preguntas sobre ellos.",
+                            "Conozco episodios históricos de la ciencia y los incluyo en los trabajos, justificando su relevancia."
+                        ]
+                    },
+                    {
+                        id: "1_2",
+                        enunciado: "1.2 ¿Poseo un conocimiento sólido de los conceptos clave de Biología, Química, Física y Geología del currículo de primaria que me permite explicarlos con claridad y sin cometer errores científicos?",
+                        niveles: [
+                            "No entiendo los conceptos principales de las áreas científicas y me cuesta explicarlos.",
+                            "Conozco los conceptos básicos de algunas áreas pero en otras me surgen dudas y cometo errores al intentar explicarlos.",
+                            "Domino los conceptos clave del currículo científico de primaria y los explico de manera que solo sé dar una explicación de “andar por casa”.",
+                            "Poseo conocimiento sólido y estructurado de todas las áreas científicas de primaria, explicando con claridad, rigor y adaptación al nivel escolar."
+                        ]
+                    },
+                    {
+                        id: "1_3",
+                        enunciado: "1.3 Comprendo la ciencia como una construcción humana en permanente revisión, basada en evidencias y no en un conjunto de verdades absolutas.",
+                        niveles: [
+                            "Veo la ciencia como un conjunto de verdades fijas e incuestionables que consisten únicamente en memorizar datos y fórmulas.",
+                            "Entiendo que la ciencia cambia, pero en mis trabajos sigo presentando los contenidos como algo que no cambiará.",
+                            "Comprendo que la ciencia se basa en evidencias y cambia con el tiempo y lo reflejo en mis trabajos, aunque me cuesta explicar cómo se construyen las hipótesis.",
+                            "Comprendo la ciencia como una actividad dinámica y entiendo que las teorías se crean a partir de evidencias empíricas."
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                nombre: "Pedagógicas y Didácticas",
+                items: [
+                    {
+                        id: "2_1",
+                        enunciado: "2.1 ¿Demuestro capacidad para seleccionar y estructurar conceptos fundamentales de un tema?",
+                        niveles: [
+                            "Me limito a copiar los contenidos de las diapositivas/libros de texto sin seleccionar lo más importante.",
+                            "Intento seleccionar ideas clave, pero me cuesta organizarlas y termino incluyendo un exceso de información.",
+                            "Selecciono y estructuro con orden los conceptos fundamentales de un tema, evitando el relleno, aunque la secuencia entre los conceptos podría ser más fluida.",
+                            "Selecciono con criterio propio los conceptos esenciales organizándolos de manera lógica y coherente para favorecer una comprensión profunda."
+                        ]
+                    },
+                    {
+                        id: "2_2",
+                        enunciado: "2.2 ¿Sé secuenciar una unidad didáctica en etapas claras a partir de un problema del día a día?",
+                        niveles: [
+                            "No sé estructurar una unidad didáctica por etapas ni relacionarlas con problemas de la vida cotidiana.",
+                            "Planteo un problema cotidiano como introducción, pero el resto de la unidad se convierte en un desarrollo tradicional desconectado de ese problema.",
+                            "Secuencio la unidad en etapas vinculadas a un problema diario, aunque alguna fase queda menos desarrollada.",
+                            "Diseño una secuencia didáctica completa y articulada en etapas a partir de un problema cotidiano auténtico, guiando el aprendizaje hacia la resolución del problema."
+                        ]
+                    },
+                    {
+                        id: "2_4",
+                        enunciado: "2.4 ¿Sé seleccionar y utilizar distintas herramientas y recursos digitales en mis exposiciones con el objetivo de hacer reflexionar al espectador?",
+                        niveles: [
+                            "No utilizo recursos digitales.",
+                            "Utilizo herramientas digitales pero de forma puramente transmisiva e ilustrativa, sin generar reflexión en la audiencia.",
+                            "Selecciono recursos digitales variados que invitan a la reflexión del espectador, aunque luego no genero el debate.",
+                            "Selecciono e integro recursos digitales interactivos y dinámicos que estimulan de forma efectiva la reflexión, discusión y pensamiento crítico."
+                        ]
+                    },
+                    {
+                        id: "2_5",
+                        enunciado: "2.5 ¿Si he diseñado alguna propuesta pedagógica, he tenido en cuenta el currículo oficial y el desarrollo evolutivo de los niños de primaria para saber qué contenidos debo tratar?",
+                        niveles: [
+                            "No consulto el currículo oficial ni tengo en cuenta el nivel de desarrollo evolutivo del alumnado.",
+                            "Consulto el currículo oficial para elegir los contenidos, pero planteo actividades sin tener en cuenta el nivel de desarrollo evolutivo.",
+                            "Considero el currículo y el desarrollo evolutivo del alumnado al diseñar propuestas.",
+                            "En mis propuestas, utilizo el currículo oficial y tengo en cuenta el desarrollo evolutivo del alumnado."
+                        ]
+                    },
+                    {
+                        id: "2_6",
+                        enunciado: "2.6 ¿Considero que el error del alumno puede ser una oportunidad de aprendizaje?",
+                        niveles: [
+                            "Veo el error del aprendiz como un fallo o penalización que debe corregirse de inmediato.",
+                            "Acepto en teoría que el error forma parte del aprendizaje, pero en mis propuestas no preveo cómo trabajarlo o reconducirlo.",
+                            "Parto del error e ideas previas del aprendiz para construir un aprendizaje y esto queda reflejado en mis propuestas.",
+                            "Utilizo el error de manera intencionada para generar conflicto cognitivo, ayudando a que el aprendiz autorregule su pensamiento."
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 3,
+                nombre: "Relación con los Alumnos",
+                items: [
+                    {
+                        id: "3_1",
+                        enunciado: "3.1 Reconozco la importancia de la empatía, paciencia y el clima afectivo en la superación del temor a la ciencia por parte de los estudiantes.",
+                        niveles: [
+                            "No tengo en cuenta la dimensión afectiva y creo que el aprendizaje de la ciencia depende de la capacidad intelectual del alumno.",
+                            "Reconozco la importancia del clima afectivo y la empatía, pero me cuesta proponer estrategias concretas para reducir la ansiedad hacia las ciencias.",
+                            "Muestro empatía y paciencia en mis reflexiones y actividades, creando un ambiente acogedor que anima a participar sin miedo a equivocarse.",
+                            "Diseño y promuevo activamente un clima basado en la confianza, empatía y seguridad afectiva, ayudando a superar bloqueos y rechazos hacia la ciencia."
+                        ]
+                    },
+                    {
+                        id: "3_2",
+                        enunciado: "3.2 Cuestiono que los alumnos sean \"torpes\" o \"listos\" y entiendo que cada alumno aprende de una manera distinta.",
+                        niveles: [
+                            "Mantengo etiquetas rígidas entre los alumnos \"listos\" y \"torpes\", asumiendo que la capacidad es algo innato e inamovible.",
+                            "Cuestiono las etiquetas, pero en mis actividades diseño una única vía de trabajo sin ofrecer apoyos a ritmos diferentes.",
+                            "Entiendo los distintos ritmos de aprendizaje y propongo algunas variaciones en las tareas para responder a la diversidad del aula.",
+                            "Rechazo que los alumnos sean \"torpes\" o \"listos\" y planifico actividades que sean más flexibles y con múltiples apoyos pedagógicos para que progresen todos."
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 4,
+                nombre: "Docente Responsable",
+                items: [
+                    {
+                        id: "4_1",
+                        enunciado: "4.1 Cuestiono críticamente el \"pensamiento docente de sentido común\" y las prácticas memorísticas que viví como estudiante con el objetivo de no volver a repetirlas en un futuro.",
+                        niveles: [
+                            "Asumo las prácticas memorísticas y transmisivas que viví en la escuela como modelo a seguir para enseñar ciencias.",
+                            "Identifico algunas prácticas tradicionales que no me gustaron como estudiante, pero me cuesta pensar alternativas innovadoras.",
+                            "Cuestiono el pensamiento docente, entiendo que no debería trabajar con una metodología tradicional, pero no sé innovar ni investigar.",
+                            "Analizo críticamente la enseñanza tradicional y entiendo por qué deben sustituirse por metodologías activas e investigadoras."
+                        ]
+                    },
+                    {
+                        id: "4_2",
+                        enunciado: "4.2 Soy capaz de trabajar en equipo con los demás en los trabajos colaborativos.",
+                        niveles: [
+                            "Me cuesta trabajar en grupo, prefiero las actividades individuales.",
+                            "Participo en trabajos en equipo, cumplo la parte que se me asigna.",
+                            "Trabajo colaborativamente en grupo, aportando ideas, escuchando activamente y llegando a acuerdos con los demás.",
+                            "Trabajo colaborativamente con liderazgo constructivo y excelencia en la facilitación grupal."
+                        ]
+                    },
+                    {
+                        id: "4_3",
+                        enunciado: "4.3 Entiendo que la docencia es una investigación-acción continua en la que las metodologías deben ponerse a prueba y mejorarse a partir de la reflexión.",
+                        niveles: [
+                            "Entiendo la docencia como la aplicación repetitiva de contenidos y técnicas que no deben ser cambiadas.",
+                            "Comprendo que la docencia puede mejorar con la práctica, pero no la planteo de forma sistemática como un proceso de investigación sobre el aula.",
+                            "Entiendo la docencia como una investigación-acción, evaluando el impacto de las metodologías empleadas para introducir mejoras en mis proyectos.",
+                            "Asumo plenamente la actitud investigadora, planteando hipótesis sobre mi labor docente y revisándolas sistemáticamente para mejorar de forma continua."
+                        ]
+                    },
+                    {
+                        id: "4_4",
+                        enunciado: "4.4 Soy capaz de criticar mi trabajo y aceptar críticas de los demás.",
+                        niveles: [
+                            "Me muestro defensivo ante las correcciones a mis trabajos y me cuesta reconocer errores.",
+                            "Acepto las observaciones de los demás, pero me cuesta realizar una autocrítica espontánea sobre mis propias producciones.",
+                            "Realizo una autocrítica constructiva de mi trabajo y acepto las sugerencias de mejora de profesores y compañeros.",
+                            "Busco activamente la retroalimentación de los demás y autoevalúo críticamente mis producciones como una oportunidad de desarrollo profesional."
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        let barChartInstance = null;
+        let radarChartInstance = null;
+
+        function generarFormulario() {
+            categoriasData.forEach(cat => {
+                const container = document.getElementById(`cat-${cat.id}-items`);
+                if (!container) return;
+                
+                cat.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "border-b border-slate-100 pb-6 last:border-b-0 last:pb-0";
+                    
+                    let nivelesHtml = '';
+                    item.niveles.forEach((desc, idx) => {
+                        const nivelNum = idx + 1;
+                        nivelesHtml += `
+                            <label class="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition-all option-label-${item.id}">
+                                <input type="radio" name="item_${item.id}" value="${nivelNum}" onchange="actualizarContador()" class="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                                <div class="ml-3 text-xs md:text-sm">
+                                    <span class="font-semibold text-slate-700">Nivel ${nivelNum}:</span>
+                                    <span class="text-slate-600">${desc}</span>
+                                </div>
+                            </label>
+                        `;
+                    });
+
+                    itemDiv.innerHTML = `
+                        <h4 class="font-medium text-slate-900 text-sm md:text-base mb-3">${item.enunciado}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${nivelesHtml}
+                        </div>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+            });
+        }
+
+        function actualizarContador() {
+            let totalRespondidos = 0;
+            const totalItems = 14;
+            
+            categoriasData.forEach(cat => {
+                cat.items.forEach(item => {
+                    const radios = document.getElementsByName(`item_${item.id}`);
+                    for (let r of radios) {
+                        if (r.checked) {
+                            totalRespondidos++;
+                            break;
+                        }
+                    }
+                });
+            });
+
+            const counterEl = document.getElementById('completion-counter');
+            counterEl.textContent = `${totalRespondidos} de ${totalItems} respondidas`;
+            if (totalRespondidos === totalItems) {
+                counterEl.className = "text-xs font-semibold bg-emerald-600 text-white px-3 py-1 rounded-full transition-all";
+            } else {
+                counterEl.className = "text-xs font-semibold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full transition-all";
+            }
+        }
+
+        function calcularResultados() {
+            let catScores = [];
+            let catMaxScores = [];
+            let catNames = [];
+            let sinResponder = false;
+
+            categoriasData.forEach(cat => {
+                let sumaCat = 0;
+                let maxCat = cat.items.length * 4;
+                cat.items.forEach(item => {
+                    const radios = document.getElementsByName(`item_${item.id}`);
+                    let seleccionado = false;
+                    for (let r of radios) {
+                        if (r.checked) {
+                            sumaCat += parseInt(r.value);
+                            seleccionado = true;
+                            break;
+                        }
+                    }
+                    if (!seleccionado) {
+                        sinResponder = true;
+                    }
+                });
+                catScores.push(sumaCat);
+                catMaxScores.push(maxCat);
+                catNames.push(cat.nombre);
+            });
+
+            if (sinResponder) {
+                mostrarModal("Atención", "Por favor, responde a todos los ítems antes de calcular los resultados finales.", "⚠️");
+                return;
+            }
+
+            // Render Summary HTML
+            const summaryContainer = document.getElementById('category-summary');
+            summaryContainer.innerHTML = '';
+            
+            catNames.forEach((name, idx) => {
+                const score = catScores[idx];
+                const max = catMaxScores[idx];
+                const pct = Math.round((score / max) * 100);
+                
+                summaryContainer.innerHTML += `
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs md:text-sm font-medium">
+                            <span class="text-slate-700">${name}</span>
+                            <span class="text-emerald-700 font-semibold">${score} / ${max} pts (${pct}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            renderizarGraficas(catNames, catScores, catMaxScores);
+            mostrarModal("¡Completado!", "Tus puntuaciones se han calculado con éxito y las gráficas se han actualizado.", "✓");
+        }
+
+        function renderizarGraficas(labels, scores, maxScores) {
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+
+            if (barChartInstance) barChartInstance.destroy();
+            if (radarChartInstance) radarChartInstance.destroy();
+
+            // Bar Chart
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Puntuación Obtenida',
+                        data: scores,
+                        backgroundColor: 'rgba(13, 148, 136, 0.8)',
+                        borderColor: 'rgba(15, 118, 110, 1)',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Radar Chart
+            radarChartInstance = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Nivel Competencial',
+                        data: scores,
+                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                        borderColor: 'rgba(15, 118, 110, 1)',
+                        pointBackgroundColor: 'rgba(15, 118, 110, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(15, 118, 110, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            ticks: { display: false, maxTicksLimit: 5 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function cargarEjemplo() {
+            categoriasData.forEach(cat => {
+                cat.items.forEach(item => {
+                    // Random level between 2 and 4 for a realistic sample
+                    const randomLevel = Math.floor(Math.random() * 3) + 2; 
+                    const radios = document.getElementsByName(`item_${item.id}`);
+                    if (radios[randomLevel - 1]) {
+                        radios[randomLevel - 1].checked = true;
+                    }
+                });
+            });
+            actualizarContador();
+            calcularResultados();
+        }
+
+        function reiniciarFormulario() {
+            document.getElementById('competencias-form').reset();
+            actualizarContador();
+            document.getElementById('category-summary').innerHTML = '<p class="text-sm text-slate-500 italic">Completa la autoevaluación y pulsa "Calcular y Actualizar Gráficas" para ver el desglose.</p>';
+            if (barChartInstance) barChartInstance.destroy();
+            if (radarChartInstance) radarChartInstance.destroy();
+            mostrarModal("Reiniciado", "Se han borrado todas las selecciones.", "ℹ");
+        }
+
+        function mostrarModal(titulo, mensaje, icono) {
+            document.getElementById('modal-title').textContent = titulo;
+            document.getElementById('modal-message').textContent = mensaje;
+            document.getElementById('modal-icon').textContent = icono;
+            const modal = document.getElementById('notification-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById('notification-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        window.onload = function() {
+            generarFormulario();
+        };
+    </script>
+</body>
+</html>
