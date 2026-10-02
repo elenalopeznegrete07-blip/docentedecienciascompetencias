@@ -33,7 +33,7 @@
 
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- Questions Section (Left 7 cols) -->
+        <!-- Panel Izquierdo: Formulario -->
         <div class="lg:col-span-7 space-y-8">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -41,7 +41,7 @@
                     <span id="completion-counter" class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">0 de 14 respondidas</span>
                 </div>
                 <p class="text-sm text-slate-600 leading-relaxed">
-                    Para cada uno de los ítems organizados en las 4 categorías, selecciona el nivel (del 1 al 4) que mejor describa tu desempeño y situación actual. Cada nivel otorga una puntuación de 1 a 4 puntos.
+                    Para cada uno de los ítems organizados en las 4 categorías, selecciona el nivel (del 0 al 4) que mejor describa tu desempeño y situación actual. Cada nivel otorga una puntuación de 0 a 4 puntos.
                 </p>
             </div>
 
@@ -51,9 +51,7 @@
                     <div class="bg-emerald-50 border-b border-emerald-100 px-6 py-4">
                         <h3 class="font-bold text-emerald-900 text-base">1. Específicas (Ciencia)</h3>
                     </div>
-                    <div class="p-6 space-y-6" id="cat-1-items">
-                        <!-- Dynamic items generated via JS or structured HTML -->
-                    </div>
+                    <div class="p-6 space-y-6" id="cat-1-items"></div>
                 </div>
 
                 <!-- CATEGORÍA 2 -->
@@ -88,10 +86,9 @@
             </form>
         </div>
 
-        <!-- Results & Charts Section (Right 5 cols) -->
+        <!-- Panel Derecho: Resultados y Gráficas -->
         <div class="lg:col-span-5 space-y-8">
             <div class="sticky top-6 space-y-8">
-                <!-- Summary Card -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Resumen de Puntuaciones</h3>
                     <div id="category-summary" class="space-y-4">
@@ -99,7 +96,6 @@
                     </div>
                 </div>
 
-                <!-- Bar Chart Card -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Gráfica Normal (Puntuación por Categoría)</h3>
                     <div class="relative h-64 w-full">
@@ -107,7 +103,6 @@
                     </div>
                 </div>
 
-                <!-- Radar Chart Card -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Gráfica de Telaraña (Radar de Competencias)</h3>
                     <div class="relative h-72 w-full">
@@ -119,7 +114,7 @@
 
     </main>
 
-    <!-- Notification Modal -->
+    <!-- Modal de Notificaciones -->
     <div id="notification-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-200 text-center">
             <div id="modal-icon" class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">✓</div>
@@ -130,7 +125,6 @@
     </div>
 
     <script>
-        // Data structure matching the exact PDF requirements
         const categoriasData = [
             {
                 id: 1,
@@ -310,7 +304,18 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = "border-b border-slate-100 pb-6 last:border-b-0 last:pb-0";
                     
-                    let nivelesHtml = '';
+                    // Renderiza primero el Nivel 0 (Ocupa ancho completo)
+                    let nivelesHtml = `
+                        <label class="flex items-start p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-all option-label-${item.id} md:col-span-2">
+                            <input type="radio" name="item_${item.id}" value="0" onchange="actualizarContador()" class="mt-1 h-4 w-4 text-slate-600 focus:ring-slate-500 border-slate-300">
+                            <div class="ml-3 text-xs md:text-sm">
+                                <span class="font-semibold text-slate-700">Nivel 0:</span>
+                                <span class="text-slate-600">No sé contestar a este ítem</span>
+                            </div>
+                        </label>
+                    `;
+                    
+                    // Renderiza los Niveles 1 al 4
                     item.niveles.forEach((desc, idx) => {
                         const nivelNum = idx + 1;
                         nivelesHtml += `
@@ -393,7 +398,6 @@
                 return;
             }
 
-            // Render Summary HTML
             const summaryContainer = document.getElementById('category-summary');
             summaryContainer.innerHTML = '';
             
@@ -426,7 +430,6 @@
             if (barChartInstance) barChartInstance.destroy();
             if (radarChartInstance) radarChartInstance.destroy();
 
-            // Bar Chart
             barChartInstance = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
@@ -455,7 +458,6 @@
                 }
             });
 
-            // Radar Chart
             radarChartInstance = new Chart(ctxRadar, {
                 type: 'radar',
                 data: {
@@ -487,11 +489,10 @@
         function cargarEjemplo() {
             categoriasData.forEach(cat => {
                 cat.items.forEach(item => {
-                    // Random level between 2 and 4 for a realistic sample
-                    const randomLevel = Math.floor(Math.random() * 3) + 2; 
+                    const randomLevelIndex = Math.floor(Math.random() * 4) + 1; 
                     const radios = document.getElementsByName(`item_${item.id}`);
-                    if (radios[randomLevel - 1]) {
-                        radios[randomLevel - 1].checked = true;
+                    if (radios[randomLevelIndex]) {
+                        radios[randomLevelIndex].checked = true;
                     }
                 });
             });
